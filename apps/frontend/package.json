@@ -1,0 +1,32 @@
+{
+	"name": "frontend",
+	"private": true,
+	"version": "0.0.0",
+	"type": "module",
+	"scripts": {
+		"dev": "vite",
+		"build": "tsc && vite build",
+		"lint": "eslint \"src/**/*.{js,mjs,cjs,ts,mts,jsx,tsx}\"",
+		"preview": "vite preview",
+		"lint:fix": "eslint \"src/**/*.{js,mjs,cjs,ts,mts,jsx,tsx}\" --fix"
+	},
+	"dependencies": {
+		"@mantine/core": "^7.1.7",
+		"@mantine/form": "^7.1.7",
+		"@mantine/hooks": "^7.1.7",
+		"react": "^18.2.0",
+		"react-dom": "^18.2.0"
+	},
+	"devDependencies": {
+		"@types/react": "^18.2.15",
+		"@types/react-dom": "^18.2.7",
+		"@vitejs/plugin-react": "^4.0.3",
+		"eslint": "^8.51.0",
+		"eslint-kit": "^10.5.2",
+		"eslint-plugin-react-refresh": "^0.4.3",
+		"tsconfig": "*",
+		"typescript": "^5.0.2",
+		"vite": "^4.4.5",
+		"prettier": "^3.0.3"
+	}
+}
