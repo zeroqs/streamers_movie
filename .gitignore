@@ -34,3 +34,19 @@ yarn-error.log*
 
 # vercel
 .vercel
+
+.vscode
+.idea
+.pgdata
+
+
+# PostgreSQL
+*.sql
+*.sql.gz
+*.pg_dump
+*.pg_restore
+*.bak
+*.backup
+*.out
+*.log
+pgdata/

@@ -7,7 +7,7 @@ services:
     environment:
       - POSTGRES_PASSWORD=${DB_PASS}
       - POSTGRES_DB=${DB_NAME}
-      - POSTGRES_USER=${postgres}
+      - POSTGRES_USER=${DB_USER}
     volumes:
       - ./pgdata:/var/lib/postgresql/data
     ports:

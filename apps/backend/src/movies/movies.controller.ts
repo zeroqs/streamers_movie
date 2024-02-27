@@ -1,6 +1,7 @@
 import { Body, Controller, Delete, Get, Param, Post } from "@nestjs/common";
 import { MoviesService } from "./movies.service";
 import { Movies } from "./movies.interface";
+import { MovieCreateInterface } from "./moviesEntity/MovieCreate.interface";
 
 @Controller("movies")
 export class MoviesController {
@@ -12,7 +13,7 @@ export class MoviesController {
   }
 
   @Post()
-  create(@Body() movieCreateInterface: { url: string; name: string }) {
+  create(@Body() movieCreateInterface: MovieCreateInterface) {
     return this.moviesService.create({
       ...movieCreateInterface,
     });
