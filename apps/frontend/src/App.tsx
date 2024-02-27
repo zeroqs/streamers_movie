@@ -37,7 +37,7 @@ export const App = () => {
 		<>
 			lets go
 			<FileButton onChange={sendFile} accept="video/*">
-				{(props) => <Button {...props}>Upload image</Button>}
+				{(props) => <Button {...props}>Upload video</Button>}
 			</FileButton>
 			<div style={{ padding: '10px', width: 600 }}>
 				<Progress value={value} size="lg" transitionDuration={200} />
