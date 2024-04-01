@@ -1,30 +1,24 @@
-/* eslint-disable @typescript-eslint/no-var-requires */
 import { Injectable } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
-import { S3Client } from "@aws-sdk/client-s3";
 import { Upload } from "@aws-sdk/lib-storage";
 import { CompleteMultipartUploadOutput } from "@aws-sdk/client-s3/dist-types/models/models_0";
 import { Subject } from "rxjs";
-import { tmpdir } from 'os';
-import { join } from 'path';
-import { promisify } from 'util';
-import * as fs from 'fs';
-const unlinkAsync = promisify(fs.unlink);
 
-const qualities = [360, 480, 720, 1080];
+import { MoviesService } from "src/movies/movies.service";
+import { addResolutionToFileName } from "src/utils/addResultionToFileName";
+import { transcodeVideo } from "src/utils/transcodeVideo";
+import { S3ClientService } from "src/s3-client/s3-client.service";
+import { DeleteObjectCommand } from "@aws-sdk/client-s3";
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const sharp = require("sharp");
+
+const qualities = [360, 1080];
 
 @Injectable()
 export class UploadMoviesService {
-	constructor(private configService: ConfigService) {}
-
-	private readonly client = new S3Client({
-		region: "ru-central1",
-		endpoint: "https://storage.yandexcloud.net",
-		credentials: {
-			accessKeyId: this.configService.get("SECRET_KEY"),
-			secretAccessKey: this.configService.get("ACCESS_KEY"),
-		},
-	});
+	constructor(
+		private moviesService: MoviesService,
+		private s3Client: S3ClientService,
+	) {}
 
 	private readonly progressSubject = new Subject<number>();
 
@@ -32,23 +26,7 @@ export class UploadMoviesService {
 		return this.progressSubject.asObservable();
 	}
 
-	addResolutionToFileName(fileName: string, resolution: string): string {
-		const extensionIndex = fileName.lastIndexOf(".");
-		if (extensionIndex === -1) {
-			throw new Error("Invalid file name");
-		}
-
-		const nameWithoutExtension = fileName.substring(0, extensionIndex);
-		const extension = fileName.substring(extensionIndex);
-
-		if (resolution === "original") {
-			return fileName; // Если требуется оригинальное разрешение, возвращаем исходное имя файла
-		} else {
-			return `${nameWithoutExtension}_${resolution}${extension}`;
-		}
-	}
-
-	async uploadVideo(
+	async uploadVideoToS3(
 		folderName: string,
 		fileName: string,
 		file: Buffer,
@@ -56,7 +34,7 @@ export class UploadMoviesService {
 		type?: number,
 	) {
 		const typeKey = type ? type : "original";
-		const newFileName = this.addResolutionToFileName(fileName, String(typeKey));
+		const newFileName = addResolutionToFileName(fileName, String(typeKey));
 
 		const uploadParams = {
 			Bucket: "movie-first-m",
@@ -65,13 +43,14 @@ export class UploadMoviesService {
 		};
 
 		const upload = new Upload({
-			client: this.client,
+			client: this.s3Client.client,
 			params: uploadParams,
 		});
 
 		if (isOriginal) {
 			upload.on("httpUploadProgress", (progress) => {
 				const percent = ((progress.loaded / progress.total) * 100).toFixed(2);
+				console.log(percent);
 				this.progressSubject.next(parseFloat(percent));
 			});
 		}
@@ -79,6 +58,47 @@ export class UploadMoviesService {
 		const fileUpload: CompleteMultipartUploadOutput = await upload.done();
 
 		return fileUpload.Location;
+	}
+
+	async uploadImageToS3(folderName: string, fileName: string, file: Buffer) {
+		const metadata = await sharp(file).metadata();
+
+		// Определяем формат изображения
+		const format = metadata.format;
+
+		let compressedImage;
+
+		try {
+			if (format === "jpeg" || format === "jpg") {
+				compressedImage = await sharp(file)
+					.jpeg({ quality: 80, progressive: true, chromaSubsampling: "4:2:0" })
+					.toBuffer();
+			} else if (format === "png") {
+				compressedImage = await sharp(file)
+					.png({ compressionLevel: 9, progressive: true })
+					.toBuffer();
+			} else {
+				compressedImage = await sharp(file).toBuffer();
+			}
+
+			const uploadParams = {
+				Bucket: "movie-first-m",
+				Key: `${folderName}/${fileName}-poster.${format}`,
+				Body: compressedImage,
+			};
+
+			const upload = new Upload({
+				client: this.s3Client.client,
+				params: uploadParams,
+			});
+
+			const fileUpload: CompleteMultipartUploadOutput = await upload.done();
+
+			return fileUpload.Location;
+		} catch (error) {
+			console.error("Error while compressing and uploading image:", error);
+			throw error;
+		}
 	}
 
 	async uploadWithQuality(
@@ -89,74 +109,51 @@ export class UploadMoviesService {
 		const folderName = fileName;
 
 		for (const quality of qualities) {
-			const transcodedVideo = await this.transcodeVideo(originalVideo, quality);
-			const location = await this.uploadVideo(folderName, fileName, transcodedVideo, false, quality);
+			const transcodedVideo = await transcodeVideo(originalVideo, quality);
+			const location = await this.uploadVideoToS3(
+				folderName,
+				fileName,
+				transcodedVideo,
+				false,
+				quality,
+			);
+			await this.moviesService.addMovieWithQuality(fileName, quality, location);
 		}
-		
+		const deleteParams = {
+			Bucket: "movie-first-m",
+			Key: `${folderName}/${fileName}`,
+		};
+
+		try {
+			await this.s3Client.client.send(new DeleteObjectCommand(deleteParams));
+		} catch (err) {
+			console.log("Error deleting file", err);
+		}
 	}
 
-async transcodeVideo(video: string, quality: number): Promise<Buffer> {
-    const ffmpegPath = require("@ffmpeg-installer/ffmpeg").path;
-		const ffmpeg = require("fluent-ffmpeg");
-	
-    ffmpeg.setFfmpegPath(ffmpegPath);
-
-  const tmpFileName = `transcodedVideo_${quality}p.mp4`;
-	const outputPath = join(tmpdir(), tmpFileName); // Путь к временному файлу
-	
-	return new Promise<Buffer>((resolve, reject) => {
-			 let resolution = '640x360'; // Предположим, что изначальное разрешение 360p
-        if (quality === 720) {
-            resolution = '1280x720';
-        } else if (quality === 1080) {
-            resolution = '1920x1080';
-        }
-
-        // Здесь используются различные битрейты в зависимости от качества
-        let bitrate = '500k'; // Пример битрейта для 480p
-        if (quality === 720) {
-            bitrate = '1500k'; // Битрейт для 720p
-        } else if (quality === 1080) {
-            bitrate = '3000k'; // Битрейт для 1080p
-		}
-		
-        ffmpeg()
-            .input(video)
-            .inputFormat("mp4")
-            .size(resolution) // Устанавливаем разрешение по высоте, чтобы сохранить соотношение сторон
-            .videoCodec('libx264') // Устанавливаем видео кодек
-            .videoBitrate(bitrate) // Устанавливаем битрейт видео
-            .audioCodec('aac') // Устанавливаем аудио кодек
-            .audioBitrate('128k') // Устанавливаем битрейт аудио
-            .outputOptions('-strict -2') // Указываем строгий режим
-            .outputFormat("mp4")
-            .on("error", (err: Error) => {
-                reject(err);
-            })
-            .on("end", () => {
-                fs.readFile(outputPath, (err, data) => {
-                    if (err) {
-                        reject(err);
-                    } else {
-                        unlinkAsync(outputPath); // Удаляем временный файл после чтения его содержимого
-                        resolve(data);
-                    }
-                });
-            })
-            .save(outputPath); // Сохраняем выходные данные в файл
-    });
-}
-
-
-	async upload(fileName: string, file: Buffer) {
+	async upload(fileName: string, movieFile: Buffer, imageFile: Buffer) {
 		const folderName = fileName;
 
-		const originalVideo = await this.uploadVideo(
-			folderName,
-			fileName,
-			file,
-			true,
-		);
-		await this.uploadWithQuality(fileName, originalVideo, qualities);
+		try {
+			const originalVideo = await this.uploadVideoToS3(
+				folderName,
+				fileName,
+				movieFile,
+				true,
+			);
+			const moviePoster = await this.uploadImageToS3(
+				folderName,
+				fileName,
+				imageFile,
+			);
+			await this.moviesService.create({
+				title: fileName,
+				imageSrc: moviePoster,
+			});
+			await this.uploadWithQuality(fileName, originalVideo, qualities);
+		} catch (error) {
+			console.error(error);
+			return new Error("Failed to upload movie");
+		}
 	}
 }

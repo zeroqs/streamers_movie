@@ -1,6 +1,6 @@
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { ConfigModule, ConfigService } from "@nestjs/config";
-import { Movie } from "../movies/moviesEntity/movieEntity";
+import { Movie, VideoQuality } from "../movies/moviesEntity/movieEntity";
 
 export const dbConfig = TypeOrmModule.forRootAsync({
   imports: [ConfigModule],
@@ -14,6 +14,6 @@ export const dbConfig = TypeOrmModule.forRootAsync({
     database: configService.get("postgresDB"),
     synchronize: true,
     autoLoadModels: true,
-    entities: [Movie],
+    entities: [Movie, VideoQuality],
   }),
 });

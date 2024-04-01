@@ -12,3 +12,14 @@ services:
       - ./pgdata:/var/lib/postgresql/data
     ports:
       - '5432:5432'
+
+  pgadmin:
+    image: dpage/pgadmin4
+    restart: always
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=nvasyankin@list.ru
+      - PGADMIN_DEFAULT_PASSWORD=${DB_PASS} 
+    ports:
+      - '8080:80'
+    depends_on:
+      - db

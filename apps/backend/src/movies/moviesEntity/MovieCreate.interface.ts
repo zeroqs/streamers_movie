@@ -1,4 +1,5 @@
 export interface MovieCreateInterface {
-  name: string;
-  url: string;
+	title: string;
+	movie: Express.Multer.File
+	// movieLogoImage : any
 }

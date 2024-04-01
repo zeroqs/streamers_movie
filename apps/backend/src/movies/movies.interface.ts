@@ -1,4 +1,4 @@
 export interface Movies {
-  url: string;
-  name: string;
+	title: string;
+	imageSrc: string;
 }
