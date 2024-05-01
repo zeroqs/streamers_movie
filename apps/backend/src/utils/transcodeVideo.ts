@@ -1,56 +1,44 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 
-import { tmpdir } from "os";
-import { join } from "path";
-import { promisify } from "util";
-import * as fs from "fs";
-const unlinkAsync = promisify(fs.unlink);
+import { Readable, PassThrough } from "stream";
 
 
-export async function transcodeVideo(video: string, quality: number): Promise<Buffer> {
-		const ffmpegPath = require("@ffmpeg-installer/ffmpeg").path;
-		const ffmpeg = require("fluent-ffmpeg");
+export async function transcodeVideo(videoStream: Readable, quality: number): Promise<Buffer> {
+    const ffmpegPath = require("@ffmpeg-installer/ffmpeg").path;
+    const ffmpeg = require("fluent-ffmpeg");
 
-		ffmpeg.setFfmpegPath(ffmpegPath);
+    ffmpeg.setFfmpegPath(ffmpegPath);
 
-		const tmpFileName = `transcodedVideo_${quality}p.mp4`;
-		const outputPath = join(tmpdir(), tmpFileName); // Путь к временному файлу
+    return new Promise<Buffer>((resolve, reject) => {
+        const transcoder = ffmpeg()
+            .input(videoStream)
+            .inputFormat("mp4")
+            .videoCodec("libx264") // Устанавливаем видео кодек
+            .audioCodec("aac") // Устанавливаем аудио кодек
+            .audioBitrate("128k") // Устанавливаем битрейт аудио
+            .outputOptions("-strict -2") // Указываем строгий режим
+            .outputFormat("mp4");
 
-		return new Promise<Buffer>((resolve, reject) => {
-			let resolution = "640x360"; // Предположим, что изначальное разрешение 360p
-			if (Number(quality) === 1080) {
-				resolution = "1920x1080";
-			}
+        // Устанавливаем разрешение и битрейт в зависимости от качества
+        if (quality === 1080) {
+            transcoder.size("1920x1080").videoBitrate("3000k");
+        } else {
+            transcoder.size("640x360").videoBitrate("750k");
+        }
 
-			// Здесь используются различные битрейты в зависимости от качества
-			let bitrate = "750k"; // Пример битрейта для 360p
-			if (Number(quality) === 1080) {
-				bitrate = "3000k"; // Битрейт для 1080p
-			}
+        transcoder.on("error", (err: Error) => {
+            reject(err);
+        })
+        .on("end", () => {
+            resolve(Buffer.concat(chunks));
+        });
 
-			ffmpeg()
-				.input(video)
-				.inputFormat("mp4")
-				.size(resolution) // Устанавливаем разрешение по высоте, чтобы сохранить соотношение сторон
-				.videoCodec("libx264") // Устанавливаем видео кодек
-				.videoBitrate(bitrate) // Устанавливаем битрейт видео
-				.audioCodec("aac") // Устанавливаем аудио кодек
-				.audioBitrate("128k") // Устанавливаем битрейт аудио
-				.outputOptions("-strict -2") // Указываем строгий режим
-				.outputFormat("mp4")
-				.on("error", (err: Error) => {
-					reject(err);
-				})
-				.on("end", () => {
-					fs.readFile(outputPath, (err, data) => {
-						if (err) {
-							reject(err);
-						} else {
-							unlinkAsync(outputPath); // Удаляем временный файл после чтения его содержимого
-							resolve(data);
-						}
-					});
-				})
-				.save(outputPath); // Сохраняем выходные данные в файл
-		});
-	}
+        const chunks: Buffer[] = [];
+        const outputStream = new PassThrough();
+        outputStream.on("data", (chunk: Buffer) => {
+            chunks.push(chunk);
+        });
+
+        transcoder.pipe(outputStream, { end: true });
+    });
+}

@@ -1,5 +1,5 @@
 import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
-import { Movies } from "./movies.interface";
+import { Movies, MoviesInterface } from "./movies.interface";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Movie, VideoQuality } from "./moviesEntity/movieEntity";
 import { Repository } from "typeorm";
@@ -15,6 +15,15 @@ export class MoviesService {
 	
   findAll(): Promise<Movies[]> {
     return this.movieRepository.find({relations: {
+        qualities: true,
+    },});
+	}
+	
+	getMovie(id : number): Promise<MoviesInterface> {
+		return this.movieRepository.findOne(
+			{
+				where: {	id: id },
+				relations: {
         qualities: true,
     },});
   }

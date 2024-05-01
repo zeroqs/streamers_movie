@@ -5,7 +5,6 @@ import { Subject } from "rxjs";
 
 import { MoviesService } from "src/movies/movies.service";
 import { addResolutionToFileName } from "src/utils/addResultionToFileName";
-import { transcodeVideo } from "src/utils/transcodeVideo";
 import { S3ClientService } from "src/s3-client/s3-client.service";
 import { DeleteObjectCommand } from "@aws-sdk/client-s3";
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -50,7 +49,6 @@ export class UploadMoviesService {
 		if (isOriginal) {
 			upload.on("httpUploadProgress", (progress) => {
 				const percent = ((progress.loaded / progress.total) * 100).toFixed(2);
-				console.log(percent);
 				this.progressSubject.next(parseFloat(percent));
 			});
 		}
@@ -101,24 +99,20 @@ export class UploadMoviesService {
 		}
 	}
 
-	async uploadWithQuality(
-		fileName: string,
-		originalVideo: string,
-		qualities: number[],
-	) {
+	async uploadWithQuality(fileName: string) {
 		const folderName = fileName;
 
-		for (const quality of qualities) {
-			const transcodedVideo = await transcodeVideo(originalVideo, quality);
-			const location = await this.uploadVideoToS3(
-				folderName,
-				fileName,
-				transcodedVideo,
-				false,
-				quality,
-			);
-			await this.moviesService.addMovieWithQuality(fileName, quality, location);
-		}
+		// for (const quality of qualities) {
+		// 	const transcodedVideo = await transcodeVideo(originalVideo, quality);
+		// 	const location = await this.uploadVideoToS3(
+		// 		folderName,
+		// 		fileName,
+		// 		transcodedVideo,
+		// 		false,
+		// 		quality,
+		// 	);
+		// 	await this.moviesService.addMovieWithQuality(fileName, quality, location);
+		// }
 		const deleteParams = {
 			Bucket: "movie-first-m",
 			Key: `${folderName}/${fileName}`,
@@ -150,7 +144,7 @@ export class UploadMoviesService {
 				title: fileName,
 				imageSrc: moviePoster,
 			});
-			await this.uploadWithQuality(fileName, originalVideo, qualities);
+			// await this.uploadWithQuality(fileName, originalVideo, qualities);
 		} catch (error) {
 			console.error(error);
 			return new Error("Failed to upload movie");

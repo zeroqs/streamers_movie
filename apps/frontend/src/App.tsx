@@ -1,3 +1,4 @@
+/* eslint-disable jsx-a11y/media-has-caption */
 import {
 	Button,
 	FileButton,
@@ -7,7 +8,10 @@ import {
 	Progress,
 	Text,
 } from '@mantine/core'
-import { useCallback, useEffect, useState } from 'react'
+import { useState } from 'react'
+
+import { FileSplitterService } from './shared/lib/FileSplitterService'
+import { UploadService } from './shared/lib/UploadService'
 
 export const App = () => {
 	const [value, setValue] = useState(0)
@@ -16,44 +20,26 @@ export const App = () => {
 	const [file, setFile] = useState<File | null>(null)
 
 	const sendData = async () => {
-		const formData = new FormData()
-		formData.append('movieFile', video!)
-		formData.append('title', videoTitle)
-		formData.append('imageFile', file!)
+		const fileSplitter = new FileSplitterService(video!)
+		const chunks = fileSplitter.splitFileIntoChunks()
 
-		const response = fetch('http://localhost:3030/movies', {
-			method: 'POST',
-			body: formData,
-		})
-		const data = (await response).json()
-		console.log(data)
+		const upload = new UploadService(
+			'movie-first-m',
+			`${videoTitle}/${videoTitle}.mp4`,
+		)
+
+		await upload.initiateMultipartUpload()
+		const etags = await upload.uploadPart(chunks)
+		const location = await upload.completeMultipartUpload(etags)
+		// const formData = new FormData()
+		// formData.append('movieFile', video!)
+		// formData.append('title', videoTitle)
+		// formData.append('imageFile', file!)
+		// const response = fetch('http://localhost:3030/movies', {
+		// 	method: 'POST',
+		// 	body: formData,
+		// })
 	}
-	// 	const response = fetch('http://localhost:3030/movies', {
-	// 		method: 'GET',
-	// 	})
-	// 	const data = (await response).json()
-	// 	console.log(data)
-	// }
-
-	// useEffect(() => {
-	// 	const eventSource = new EventSource(
-	// 		'http://localhost:3030/upload-movies/progress',
-	// 	)
-
-	// 	eventSource.addEventListener('error', (err) => {
-	// 		console.error('EventSource failed:', err)
-	// 	})
-
-	// 	eventSource.addEventListener('message', (event) => {
-	// 		const data = JSON.parse(event.data)
-	// 		const progress = data.progress
-	// 		setValue(progress)
-
-	// 		if (progress === 100) {
-	// 			eventSource.close()
-	// 		}
-	// 	})
-	// }, [sendData])
 
 	return (
 		<div
@@ -93,6 +79,13 @@ export const App = () => {
 			<Button onClick={sendData} color="green">
 				Сохранить
 			</Button>
+
+			<video
+				width={500}
+				height={300}
+				controls
+				// src="http://localhost:3030/stream-movies/2?quality=1080"
+			/>
 		</div>
 	)
 }

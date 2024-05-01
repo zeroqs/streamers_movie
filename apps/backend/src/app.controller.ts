@@ -1,12 +1,8 @@
 import {
   Controller,
   Get,
-  Post,
-  UploadedFile,
-  UseInterceptors,
 } from "@nestjs/common";
 import { AppService } from "./app.service";
-import { FileInterceptor } from "@nestjs/platform-express";
 
 @Controller()
 export class AppController {
@@ -17,10 +13,4 @@ export class AppController {
     return this.appService.getHello();
   }
 
-  @Post("upload")
-  @UseInterceptors(FileInterceptor("file"))
-  uploadFile(@UploadedFile() file: Express.Multer.File) {
-    console.log("Received file:", file);
-    return { message: "File uploaded successfully" };
-  }
 }
