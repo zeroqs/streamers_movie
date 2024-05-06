@@ -3,19 +3,43 @@ import { ApiService } from './ApiService'
 export class UploadService {
 	readonly bucketName: string
 	readonly key: string
+	readonly imageFile: File
 	private uploadId: string
-	readonly eTags: string[] = []
+	private eTags: string[] = []
 
-	constructor(bucketName: string, key: string) {
+	private imageFileLocation: string
+	private movieTitle: string
+
+	constructor(bucketName: string, key: string, imageFile: File) {
 		this.bucketName = bucketName
 		this.key = key
+		this.imageFile = imageFile
+		this.movieTitle = key
 	}
 
-	async initiateMultipartUpload() {
+	async imageFileUpload() {
+		const formData = new FormData()
+		formData.append('imageFile', this.imageFile)
+		formData.append('bucketName', this.bucketName)
+		formData.append('key', this.key)
+
+		const response = await ApiService.post('s3-service/upload-image', {
+			body: formData,
+		})
+		const imageUrl = await response.text()
+
+		this.imageFileLocation = imageUrl
+	}
+
+	async initiateMultipartUpload(chunks: Blob[]) {
 		const uploadId = await ApiService.post('s3-service/initiate-upload', {
 			json: { bucketName: this.bucketName, key: this.key },
 		})
 		this.uploadId = await uploadId.text()
+
+		await this.imageFileUpload()
+
+		this.uploadPart(chunks)
 	}
 
 	async uploadPart(chunks: Blob[]) {
@@ -26,7 +50,7 @@ export class UploadService {
 			this.eTags.push(eTag)
 		}
 
-		return this.eTags
+		this.completeMultipartUpload(this.eTags)
 	}
 
 	async uploadPartRequest(chunk: Blob, partNumber: number): Promise<string> {
@@ -44,8 +68,8 @@ export class UploadService {
 		return eTag
 	}
 
-	async completeMultipartUpload(etags: string[]): Promise<string> {
-		const location = await ApiService.post('s3-service/complete-upload', {
+	async completeMultipartUpload(etags: string[]) {
+		const response = await ApiService.post('s3-service/complete-upload', {
 			json: {
 				bucketName: this.bucketName,
 				key: this.key,
@@ -53,6 +77,14 @@ export class UploadService {
 				etags,
 			},
 		})
-		return location.text()
+		const movieLocation = await response.text()
+
+		await ApiService.post('movies', {
+			json: {
+				title: this.movieTitle,
+				imageSrc: this.imageFileLocation,
+				movieSrc: movieLocation,
+			},
+		})
 	}
 }

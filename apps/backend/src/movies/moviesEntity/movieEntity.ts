@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany, ManyToOne } from "typeorm";
+import { Entity, PrimaryGeneratedColumn, Column } from "typeorm";
 
 @Entity("Movie")
 export class Movie {
@@ -9,23 +9,9 @@ export class Movie {
 	title: string;
 	
 	@Column({ type: "text" })
-  imageSrc: string;
-
-  @OneToMany(() => VideoQuality, videoQuality => videoQuality.movie)
-  qualities: VideoQuality[];
+	imageSrc: string;
+	
+	@Column({ type: "text" })
+  movieSrc: string;
 }
 
-@Entity("VideoQuality")
-export class VideoQuality {
-  @PrimaryGeneratedColumn()
-  id: number;
-
-  @Column({ type: "text" })
-  quality: number;
-
-  @Column({ type: "text" })
-  url: string;
-
-  @ManyToOne(() => Movie, movie => movie.qualities)
-  movie: Movie;
-}

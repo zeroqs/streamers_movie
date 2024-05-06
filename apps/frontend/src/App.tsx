@@ -17,28 +17,15 @@ export const App = () => {
 	const [value, setValue] = useState(0)
 	const [video, setVideo] = useState<File | null>(null)
 	const [videoTitle, setVideoTitle] = useState('')
-	const [file, setFile] = useState<File | null>(null)
+	const [imageFile, setImageFile] = useState<File | null>(null)
 
 	const sendData = async () => {
 		const fileSplitter = new FileSplitterService(video!)
 		const chunks = fileSplitter.splitFileIntoChunks()
 
-		const upload = new UploadService(
-			'movie-first-m',
-			`${videoTitle}/${videoTitle}.mp4`,
-		)
+		const upload = new UploadService('movie-first-m', videoTitle, imageFile!)
 
-		await upload.initiateMultipartUpload()
-		const etags = await upload.uploadPart(chunks)
-		const location = await upload.completeMultipartUpload(etags)
-		// const formData = new FormData()
-		// formData.append('movieFile', video!)
-		// formData.append('title', videoTitle)
-		// formData.append('imageFile', file!)
-		// const response = fetch('http://localhost:3030/movies', {
-		// 	method: 'POST',
-		// 	body: formData,
-		// })
+		await upload.initiateMultipartUpload(chunks)
 	}
 
 	return (
@@ -66,14 +53,14 @@ export const App = () => {
 				<Progress value={value} size="lg" transitionDuration={200} />
 			</div>
 			<Group justify="center">
-				<FileButton onChange={setFile} accept="image/png,image/jpeg">
+				<FileButton onChange={setImageFile} accept="image/png,image/jpeg">
 					{(props) => <Button {...props}>Upload image</Button>}
 				</FileButton>
 			</Group>
 
-			{file && (
+			{imageFile && (
 				<Text size="sm" ta="center" mt="sm">
-					Picked file: {file.name}
+					Picked file: {imageFile.name}
 				</Text>
 			)}
 			<Button onClick={sendData} color="green">

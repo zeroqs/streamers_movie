@@ -1,10 +1,7 @@
-import { VideoQuality } from "src/movies/moviesEntity/movieEntity";
 
-export interface Movies {
+export interface Movie {
 	title: string;
 	imageSrc: string;
+	movieSrc : string
 }
 
-export interface MoviesInterface extends Movies {
-	qualities: VideoQuality[];
-}

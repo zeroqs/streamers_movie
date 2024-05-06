@@ -32,15 +32,10 @@ export class StreamMoviesController {
 
 		const movie = await this.moviesService.getMovie(Number(id));
 		const movieTitle = movie.title
-		const {
-			url: movieSrc,
-			quality,
-		} = movie.qualities.find((q) => q.quality == Number(query.quality));
-		if (movieSrc) {
+		if (movie.movieSrc) {
 			const { headers, movieStream } = await this.streamMoviesService.stream(
-				movieSrc,
+				movie.movieSrc,
 				range,
-				quality,
 				movieTitle
 			);
 
@@ -52,3 +47,4 @@ export class StreamMoviesController {
 		}
 	}
 }
+

@@ -13,12 +13,11 @@ export class StreamMoviesService {
 	async stream(
 		movieUrl: string,
 		range: string,
-		quality: number,
 		title: string,
 	) {
 		const params = {
 			Bucket: "movie-first-m",
-			Key: `${title}/${title}_${quality}.mp4`,
+			Key: `${title}/${title}.mp4`,
 		};
 
 		const headParams = { ...params };
