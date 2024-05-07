@@ -71,7 +71,7 @@ export const App = () => {
 				width={500}
 				height={300}
 				controls
-				// src="http://localhost:3030/stream-movies/2?quality=1080"
+				src="http://localhost:3030/stream-movies/1"
 			/>
 		</div>
 	)

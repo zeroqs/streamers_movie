@@ -4,7 +4,6 @@ import {
 	Get,
 	Header,
 	Param,
-	Query,
 	Headers,
 	Res,
 } from "@nestjs/common";
@@ -22,7 +21,6 @@ export class StreamMoviesController {
 	@Header("Accept-Ranges", "bytes")
 	async streamMovie(
 		@Param("id") id: string,
-		@Query() query: { quality: string },
 		@Headers("range") range: string,
 		@Res() response: Response,
 	) {
@@ -34,7 +32,6 @@ export class StreamMoviesController {
 		const movieTitle = movie.title
 		if (movie.movieSrc) {
 			const { headers, movieStream } = await this.streamMoviesService.stream(
-				movie.movieSrc,
 				range,
 				movieTitle
 			);

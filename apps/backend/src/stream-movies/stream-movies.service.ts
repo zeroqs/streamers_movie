@@ -11,7 +11,6 @@ export class StreamMoviesService {
 	constructor(private s3Client: S3ClientService) {}
 
 	async stream(
-		movieUrl: string,
 		range: string,
 		title: string,
 	) {
