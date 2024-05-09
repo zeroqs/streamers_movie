@@ -29,11 +29,11 @@ export class StreamMoviesController {
 		}
 
 		const movie = await this.moviesService.getMovie(Number(id));
-		const movieTitle = movie.title
+		const movieTitle = movie.title;
 		if (movie.movieSrc) {
 			const { headers, movieStream } = await this.streamMoviesService.stream(
 				range,
-				movieTitle
+				movieTitle,
 			);
 
 			response.status(206);
@@ -44,4 +44,3 @@ export class StreamMoviesController {
 		}
 	}
 }
-
