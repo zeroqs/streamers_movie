@@ -1,23 +1,6 @@
-const { configure, presets } = require('eslint-kit')
+const { configure } = require('eslint-kit')
+const path = require('path')
 
 module.exports = configure({
-	extends: ['../../.eslintrc.js'],
-	allowDebug: process.env.NODE_ENV !== 'production',
-
-	presets: [
-		presets.imports({
-			sort: {
-				newline: true,
-			},
-			alias: {
-				paths: {
-					'@': './src',
-				},
-			},
-		}),
-		presets.node(),
-		presets.prettier(),
-		presets.typescript(),
-		presets.react(),
-	],
+  extends: require(path.resolve(__dirname, '../../base.eslintrc.js')),
 })
