@@ -66,11 +66,10 @@ export class S3ClientController {
 
 	@Post("complete-upload")
 	async completeUpload(@Body() body: s3CompleteUploadDto) {
-		const key = `${body.key}/${body.key}.mp4`;
 
 		const fileLocation = await this.s3ClientService.completeMultipartUpload(
 			body.bucketName,
-			key,
+			body.key,
 			body.uploadId,
 			body.etags,
 		);
