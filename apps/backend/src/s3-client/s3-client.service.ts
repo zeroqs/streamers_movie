@@ -151,7 +151,7 @@ export class S3ClientService {
 		// 	exec(command).on('exit', resolve).on('error', reject)
 		// })
 
-		exec(command).on("error", (e) => console.log(e) ).on('exit', async () => {
+		await exec(command).on("error", (e) => console.log(e) ).on('exit', async () => {
 			const files = fs.readdirSync(hlsFolder, { withFileTypes: true })
 
 			for (const file of files) {
@@ -182,30 +182,6 @@ export class S3ClientService {
 				}
 			}
 		})
-
-		// Получение списка файлов и папок в текущей директории
-		// const files = fs.readdirSync(hlsFolder, { withFileTypes: true })
-		// console.log(files)
-		// for (const file of files) {
-		// 	if (file.isDirectory()) continue
-
-		// 	const filePath = path.join(hlsFolder, file.name)
-
-		// 	const fileStream = fs.createReadStream(filePath)
-
-		// 	const uploadParams = {
-		// 		Bucket: bucketName,
-		// 		Key: `${key}/stream/${file}`,
-		// 		Body: fileStream,
-		// 		ContentType: file.name.endsWith('.ts')
-		// 			? 'video/mp2t'
-		// 			: file.name.endsWith('.m3u8')
-		// 				? 'application/x-mpegURL'
-		// 				: null,
-		// 	}
-		// 	// await s3.upload(uploadParams).promise()
-		// 	fs.unlinkSync(filePath)
-		// }
 	}
 
 	async uploadFolder(filePath: string, bucketName: string, key: string) {

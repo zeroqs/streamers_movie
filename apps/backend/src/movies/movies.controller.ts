@@ -18,6 +18,12 @@ export class MoviesController {
 		return this.moviesService.findAll();
 	}
 
+	@Get("/:id")
+	getMovie(@Param("id") id: string): Promise<Movie> {
+		console.log(id);
+		return this.moviesService.getMovie(id);
+	}
+
 
 	@Post()
 	create(@Body() body: Movie): Promise<Movie> {

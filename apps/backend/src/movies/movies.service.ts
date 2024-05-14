@@ -15,10 +15,10 @@ export class MoviesService {
     return this.movieRepository.find();
 	}
 	
-	getMovie(id : number): Promise<MovieType> {
+	getMovie(id : number | string): Promise<MovieType> {
 		return this.movieRepository.findOne(
 			{
-				where: {	id: id },
+				where: {	id: Number(id) },
     });
   }
 
