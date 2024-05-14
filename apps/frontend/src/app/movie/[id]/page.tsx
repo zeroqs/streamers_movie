@@ -7,7 +7,7 @@ interface Movie {
 
 const fetchMovie = async (id: string) => {
 	const res = await fetch(`http://localhost:3030/movies/${id}`)
-
+	console.log(res)
 	const data: Movie = await res.json()
 
 	return data
@@ -16,12 +16,5 @@ const fetchMovie = async (id: string) => {
 export default async function Movie({ params }: { params: { id: string } }) {
 	const movie = await fetchMovie(params.id)
 
-	return (
-		<div>
-			{movie.movieSrc}
-			<video width="320" height="240" controls preload="none">
-				<source src={movie.movieSrc} type="" />
-			</video>
-		</div>
-	)
+	return <div></div>
 }
