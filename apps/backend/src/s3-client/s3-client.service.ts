@@ -15,12 +15,9 @@ const fs = require('fs')
 const path = require('path')
 const { exec } = require('node:child_process')
 
-// const util = require('node:util');
-// const exec = util.promisify(require('node:child_process').exec);
-
 @Injectable()
 export class S3ClientService {
-	constructor(private configService: ConfigService) { }
+	constructor(private configService: ConfigService) {}
 
 	readonly client = new AWSClient({
 		region: 'ru-central1',
@@ -93,20 +90,29 @@ export class S3ClientService {
 		partNumber: number,
 		uploadId: string,
 	) {
-		try {
-			const params = new UploadPartCommand({
-				Bucket: bucketName,
-				Key: key,
-				Body: body,
-				PartNumber: partNumber,
-				UploadId: uploadId,
-			})
+		const maxRetries = 3
 
-			const response = await this.client.send(params)
+		let attempt = 0
+		while (attempt < maxRetries) {
+			try {
+				const params = new UploadPartCommand({
+					Bucket: bucketName,
+					Key: key,
+					Body: body,
+					PartNumber: partNumber,
+					UploadId: uploadId,
+				})
 
-			return response.ETag
-		} catch (error) {
-			console.log('uploadPart:', error)
+				const response = await this.client.send(params)
+
+				return response.ETag
+			} catch (error) {
+				console.log('uploadPart:', error)
+				attempt++
+				if (attempt === maxRetries) {
+					throw new Error('Part upload max retries exceeded')
+				}
+			}
 		}
 	}
 
@@ -151,37 +157,37 @@ export class S3ClientService {
 		// 	exec(command).on('exit', resolve).on('error', reject)
 		// })
 
-		await exec(command).on("error", (e) => console.log(e) ).on('exit', async () => {
-			const files = fs.readdirSync(hlsFolder, { withFileTypes: true })
+		await exec(command)
+			.on('error', (e) => console.log(e))
+			.on('exit', async () => {
+				const files = fs.readdirSync(hlsFolder, { withFileTypes: true })
 
-			for (const file of files) {
-				const itemPath = path.join(hlsFolder, file.name)
+				for (const file of files) {
+					const itemPath = path.join(hlsFolder, file.name)
 
+					// Получение списка файлов и папок в текущей директории, загрузка master плейлиста и папок
+					if (file.isDirectory()) {
+						this.uploadFolder(itemPath, bucketName, key)
+					} else {
+						const fileStream = fs.createReadStream(itemPath)
 
-				// Получение списка файлов и папок в текущей директории, загрузка master плейлиста и папок
-				if (file.isDirectory()) {
-					this.uploadFolder(itemPath, bucketName, key)
-				} else {
-					const fileStream = fs.createReadStream(itemPath)
+						const uploadParams = {
+							Bucket: bucketName,
+							Key: `${key}/stream/${file.name}`,
+							Body: fileStream,
+							ContentType: 'application/x-mpegURL',
+						}
 
-					const uploadParams = {
-						Bucket: bucketName,
-						Key: `${key}/stream/${file.name}`,
-						Body: fileStream,
-						ContentType: 'application/x-mpegURL',
+						const command = new Upload({
+							client: this.client,
+							params: uploadParams,
+						})
+
+						await command.done()
+						fs.rmSync('public/video', { recursive: true, force: true })
 					}
-
-					const command = new Upload({
-						client: this.client,
-						params: uploadParams,
-					})
-
-					await command.done()
-					fs.rmSync("public/video", { recursive: true, force: true });
-
 				}
-			}
-		})
+			})
 	}
 
 	async uploadFolder(filePath: string, bucketName: string, key: string) {
@@ -192,24 +198,21 @@ export class S3ClientService {
 			const itemPath = path.join(filePath, file.name)
 
 			// Получение списка файлов и папок в текущей директории, загрузка master плейлиста и папок
-				const fileStream = fs.createReadStream(itemPath)
+			const fileStream = fs.createReadStream(itemPath)
 
-				const uploadParams = {
-					Bucket: bucketName,
-					Key: `${key}/stream/${fileQuality}/${file.name}`,
-					Body: fileStream,
-					ContentType: 'application/x-mpegURL',
-				}
+			const uploadParams = {
+				Bucket: bucketName,
+				Key: `${key}/stream/${fileQuality}/${file.name}`,
+				Body: fileStream,
+				ContentType: 'application/x-mpegURL',
+			}
 
-				const command = new Upload({
-					client: this.client,
-					params: uploadParams,
-				})
+			const command = new Upload({
+				client: this.client,
+				params: uploadParams,
+			})
 
-				command.done()
-		
+			command.done()
 		}
-	
 	}
-
 }
