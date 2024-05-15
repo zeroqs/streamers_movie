@@ -90,6 +90,8 @@ export class S3ClientService {
 		partNumber: number,
 		uploadId: string,
 	) {
+		const delay = 5000
+
 		const maxRetries = 3
 
 		let attempt = 0
@@ -107,10 +109,12 @@ export class S3ClientService {
 
 				return response.ETag
 			} catch (error) {
-				console.log('uploadPart:', error)
+				console.error('uploadPart:', error)
 				attempt++
 				if (attempt === maxRetries) {
 					throw new Error('Part upload max retries exceeded')
+				} else {
+					await new Promise((resolve) => setTimeout(resolve, delay))
 				}
 			}
 		}
