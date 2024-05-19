@@ -143,9 +143,19 @@ export class S3ClientService {
 
 			const response = await this.client.send(command)
 
-			this.createHlsFragments(response.Location, bucketName, key)
+			console.log(response.Location)
+			await this.createHlsFragments(response.Location, bucketName, key)
 
-			return response.Location
+			const baseUrl = response.Location.split('/')
+
+			baseUrl[baseUrl.length - 1] = 'stream'
+			baseUrl.push('master.m3u8')
+
+			const movieStreamUrl = baseUrl.join('/')
+
+			console.log(movieStreamUrl)
+
+			return movieStreamUrl
 		} catch (error) {
 			console.log('completeMultipartUpload:', error)
 		}

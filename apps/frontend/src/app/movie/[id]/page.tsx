@@ -1,3 +1,5 @@
+import { MoviePlayer } from '@/shared/ui/movie-player'
+
 interface Movie {
 	id: number
 	title: string
@@ -15,6 +17,10 @@ const fetchMovie = async (id: string) => {
 
 export default async function Movie({ params }: { params: { id: string } }) {
 	const movie = await fetchMovie(params.id)
-
-	return <div></div>
+	console.log(movie)
+	return (
+		<div>
+			<MoviePlayer src={movie.movieSrc} />
+		</div>
+	)
 }
