@@ -1,3 +1,4 @@
+/* eslint-disable jsx-a11y/no-static-element-interactions */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client'
 import 'video.js/dist/video-js.css'
@@ -6,6 +7,8 @@ import React, { useEffect, useRef, useState } from 'react'
 import videojs from 'video.js'
 
 import { Button } from '@/shared/ui/button'
+
+require('videojs-hls-quality-selector')
 
 interface MoviePlayerProps {
 	src: string
@@ -16,10 +19,19 @@ interface MoviePlayerProps {
 export const MoviePlayer: React.FC<MoviePlayerProps> = ({ src }) => {
 	const videoRef = useRef<HTMLDivElement | null>(null)
 	const playerRef = useRef<any | null>(null)
+	// const progressBarRef = useRef(null)
 
-	const [progress, setProgress] = useState(0)
-	const [buffered, setBuffered] = useState(0)
-	const [duration, setDuration] = useState(0)
+	// const [progress, setProgress] = useState(0)
+	// const [buffered, setBuffered] = useState(0)
+	// const [duration, setDuration] = useState(0)
+	// const [isDragging, setIsDragging] = useState(false)
+
+	// const handleClick = (e) => {
+	// 	const rect = progressBarRef.current.getBoundingClientRect()
+	// 	const offsetX = e.clientX - rect.left
+	// 	const newProgress = (offsetX / rect.width) * duration
+	// 	playerRef.current?.currentTime(newProgress)
+	// }
 
 	useEffect(() => {
 		// Make sure Video.js player is only initialized once
@@ -30,6 +42,7 @@ export const MoviePlayer: React.FC<MoviePlayerProps> = ({ src }) => {
 			videoRef.current.append(videoElement)
 
 			const playerOptions: unknown = {
+				controls: true,
 				sources: [
 					{
 						src,
@@ -39,32 +52,27 @@ export const MoviePlayer: React.FC<MoviePlayerProps> = ({ src }) => {
 			}
 
 			playerRef.current = videojs(videoElement, playerOptions, () => {
-				setDuration(playerRef.current.duration())
-
-				if (playerRef.current.readyState() < 1) {
-					// wait for loadedmetdata event
-					playerRef.current.one('loadedmetadata', onLoadedMetadata)
-				} else {
-					// metadata already loaded
-					onLoadedMetadata()
-				}
-
-				function onLoadedMetadata() {
-					setDuration(playerRef.current.duration())
-				}
-
-				playerRef.current.on('timeupdate', () => {
-					setProgress(playerRef.current.currentTime())
-					const buffered = playerRef.current.buffered()
-					let bufferedTime = 0
-					for (let i = 0; i < buffered.length; i++) {
-						bufferedTime += buffered.end(i) - buffered.start(i)
-					}
-
-					setBuffered(bufferedTime)
-				})
+				// setDuration(playerRef.current.duration())
+				// if (playerRef.current.readyState() < 1) {
+				// 	// wait for loadedmetdata event
+				// 	playerRef.current.one('loadedmetadata', () =>
+				// 		setDuration(playerRef.current.duration()),
+				// 	)
+				// } else {
+				// 	// metadata already loaded
+				// 	setDuration(playerRef.current.duration())
+				// }
+				// playerRef.current.on('timeupdate', () => {
+				// 	setProgress(playerRef.current.currentTime())
+				// 	const buffered = playerRef.current.buffered()
+				// 	let bufferedTime = 0
+				// 	for (let i = 0; i < buffered.length; i++) {
+				// 		bufferedTime += buffered.end(i) - buffered.start(i)
+				// 	}
+				// 	setBuffered(bufferedTime)
+				// })
 			})
-
+			playerRef.current.hlsQualitySelector()
 			// You could update an existing player in the `else` block here
 			// on prop change, for example:
 		} else if (playerRef.current) {
@@ -83,33 +91,46 @@ export const MoviePlayer: React.FC<MoviePlayerProps> = ({ src }) => {
 			}
 		}
 	}, [])
-	const progressPercentage = duration ? (progress / duration) * 100 : 0
-	const bufferedPercentage = duration ? (buffered / duration) * 100 : 0
 
 	return (
 		<>
-			<div data-vjs-player>
+			<div className="relative w-fit" data-vjs-player>
 				<div ref={videoRef} />
+				{/* <div className="absolute bottom-0 left-0 right-0 w-full p-1">
+					<input
+						className="w-full"
+						onMouseMove={handleMouseMove}
+						onChange={(e) => playerRef.current?.currentTime(e.target.value)}
+						value={progress}
+						min={0}
+						max={duration}
+						type="range"
+					/>
+				</div> */}
 			</div>
 
-			<div className="flex gap-8 mt-14">
+			{/* <div className="flex gap-8 mt-14">
 				<Button onClick={() => playerRef.current?.play()}>play</Button>
 				<Button onClick={() => playerRef.current?.pause()}>pause</Button>
 				<Button onClick={() => playerRef.current?.requestFullscreen()}>
 					full screen
 				</Button>
-			</div>
+			</div> */}
 
-			<div className="relative w-full h-2 bg-gray-300">
+			{/* <div
+				className="group w-full h-1 bg-gray-300 relative cursor-pointer rounded mt-14"
+				onClick={handleClick}
+				ref={progressBarRef}
+			>
 				<div
-					className="absolute h-full bg-gray-500"
-					style={{ width: `${bufferedPercentage}%` }}
+					className="rounded h-full bg-red-600 transition-all duration-300 ease-in-out"
+					style={{ width: `${(progress / duration) * 100}%` }}
 				/>
 				<div
-					className="absolute h-full bg-blue-500"
-					style={{ width: `${progressPercentage}%` }}
+					className="hidden group-hover:block absolute top-0 left-0 h-3 w-3 bg-red-600 border border-red-600 rounded-full transform -translate-x-1/2 -translate-y-1 transition-transform duration-300 ease-in-out"
+					style={{ left: `${(progress / duration) * 100}%` }}
 				/>
-			</div>
+			</div> */}
 		</>
 	)
 }
