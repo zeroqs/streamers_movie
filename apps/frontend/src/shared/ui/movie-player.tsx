@@ -3,10 +3,8 @@
 'use client'
 import 'video.js/dist/video-js.css'
 
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useRef } from 'react'
 import videojs from 'video.js'
-
-import { Button } from '@/shared/ui/button'
 
 require('videojs-hls-quality-selector')
 
