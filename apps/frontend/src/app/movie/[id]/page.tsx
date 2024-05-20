@@ -16,11 +16,11 @@ const fetchMovie = async (id: string) => {
 }
 
 export default async function Movie({ params }: { params: { id: string } }) {
-	const movie = await fetchMovie(params.id)
-	console.log(movie)
+	// const movie = await fetchMovie(params.id)
+
 	return (
 		<div>
-			<MoviePlayer src={movie.movieSrc} />
+			<MoviePlayer src="https://storage.yandexcloud.net/movie-first-m/test/stream/master.m3u8" />
 		</div>
 	)
 }
