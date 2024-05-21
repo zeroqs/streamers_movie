@@ -176,6 +176,8 @@ export class S3ClientService {
 			.on('exit', async () => {
 				const files = fs.readdirSync(hlsFolder, { withFileTypes: true })
 
+				console.log('files', files)
+
 				for (const file of files) {
 					const itemPath = path.join(hlsFolder, file.name)
 

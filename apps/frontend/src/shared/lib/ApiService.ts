@@ -1,7 +1,7 @@
 import ky, { Options, ResponsePromise } from 'ky'
 
 export class ApiService {
-	static readonly baseUrl: string = 'http://176.109.101.147:3030'
+	static readonly baseUrl: string = 'http://176.109.101.147:3000'
 
 	static async get(url?: string, options?: Options): Promise<ResponsePromise> {
 		try {
