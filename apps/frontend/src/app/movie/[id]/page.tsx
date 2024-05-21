@@ -8,7 +8,7 @@ interface Movie {
 }
 
 const fetchMovie = async (id: string) => {
-	const res = await fetch(`http://localhost:3030/movies/${id}`)
+	const res = await fetch(`http://176.109.101.147:3030/movies/${id}`)
 
 	const data: Movie = await res.json()
 
