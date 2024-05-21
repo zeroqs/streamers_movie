@@ -10,6 +10,10 @@ interface Movie {
 const fetchMovie = async (id: string) => {
 	const res = await fetch(`http://176.109.101.147:3000/movies/${id}`)
 
+	if (!res.ok) {
+		throw new Error('Failed to fetch data')
+	}
+
 	const data: Movie = await res.json()
 
 	return data
