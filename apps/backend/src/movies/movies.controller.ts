@@ -1,4 +1,13 @@
-import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common'
+import {
+	Body,
+	Controller,
+	Delete,
+	Get,
+	HttpException,
+	HttpStatus,
+	Param,
+	Post,
+} from '@nestjs/common'
 import { MoviesService } from './movies.service'
 import { Movie } from './movies.interface'
 
@@ -12,8 +21,14 @@ export class MoviesController {
 	}
 
 	@Get('/:id')
-	getMovie(@Param('id') id: string): Promise<Movie> {
-		return this.moviesService.getMovie(id)
+	async getMovie(@Param('id') id: string): Promise<Movie> {
+		const movie = await this.moviesService.getMovie(id)
+
+		if (!movie) {
+			throw new HttpException('Movie not found', HttpStatus.NOT_FOUND)
+		}
+
+		return movie
 	}
 
 	@Post()

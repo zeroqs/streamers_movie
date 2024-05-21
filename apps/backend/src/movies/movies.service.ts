@@ -16,14 +16,9 @@ export class MoviesService {
 	}
 
 	getMovie(id: number | string): Promise<MovieType> {
-		const movie = this.movieRepository.findOne({
+		return this.movieRepository.findOne({
 			where: { id: Number(id) },
 		})
-		if (!movie) {
-			throw new HttpException('Movie not found', HttpStatus.NOT_FOUND)
-		}
-
-		return movie
 	}
 
 	async create(dto: MovieType) {
