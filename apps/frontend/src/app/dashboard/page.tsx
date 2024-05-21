@@ -24,25 +24,31 @@ export default function Dashboard() {
 
 	return (
 		<main className="flex flex-col gap-6 min-h-screen p-24">
-			<div className="grid w-full max-w-sm items-center gap-1.5">
+			<div>
 				<Label htmlFor="picture">Movie</Label>
 				<Input
 					accept="video/*"
+					className="max-w-sm"
 					onChange={(event) => setVideo(event.target.files![0])}
 					id="picture"
 					type="file"
 				/>
 			</div>
-			<Input
-				className="max-w-sm"
-				value={videoTitle}
-				onChange={(event) => setVideoTitle(event.target.value)}
-				type="text"
-				placeholder="Title"
-			/>
-			<div className="grid w-full max-w-sm items-center gap-1.5">
+			<div>
+				<Label htmlFor="title">Title</Label>
+				<Input
+					id="title"
+					className="max-w-sm"
+					value={videoTitle}
+					onChange={(event) => setVideoTitle(event.target.value)}
+					type="text"
+					placeholder="Title"
+				/>
+			</div>
+			<div>
 				<Label htmlFor="picture">Picture</Label>
 				<Input
+					className="max-w-sm"
 					accept="image/*"
 					onChange={(event) => setImageFile(event.target.files![0])}
 					id="picture"

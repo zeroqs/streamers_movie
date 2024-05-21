@@ -1,5 +1,5 @@
 import ky, { Options, ResponsePromise } from 'ky'
-
+// 176.109.101.147:3000
 export class ApiService {
 	static readonly baseUrl: string = 'http://176.109.101.147:3000'
 

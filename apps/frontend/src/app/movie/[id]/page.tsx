@@ -1,15 +1,16 @@
 import { MoviePlayer } from '@/shared/ui/movie-player'
 
-interface Movie {
+export interface Movie {
 	id: number
 	title: string
 	movieSrc: string
 	imageSrc: string
 }
+// 176.109.101.147:3000
 
 const fetchMovie = async (id: string) => {
 	const res = await fetch(`http://176.109.101.147:3000/movies/${id}`)
-	console.log(res)
+
 	if (!res.ok) {
 		throw new Error('Failed to fetch data')
 	}
