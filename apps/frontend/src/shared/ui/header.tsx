@@ -8,7 +8,10 @@ export const Header = () => {
 			<Link href="/">
 				<h1 className="text-2xl font-bold">Movies</h1>
 			</Link>
-			<ModeToggle />
+			<div className="flex gap-4 items-center">
+				<Link href="/dashboard">Upload video</Link>
+				<ModeToggle />
+			</div>
 		</header>
 	)
 }

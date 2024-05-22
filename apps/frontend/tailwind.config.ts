@@ -19,7 +19,7 @@ const config = {
 		},
 		extend: {
 			gridTemplateColumns: {
-				movies: 'repeat(auto-fit, minmax(250px, 370px))',
+				movies: 'repeat(auto-fit, minmax(250px, 350px))',
 			},
 			colors: {
 				border: 'hsl(var(--border))',
